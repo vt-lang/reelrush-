@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaziya Reels</title>
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff0050">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vaziya Reels">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #000; 
+            color: white; 
+            height: 100vh; 
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .reels-container { 
+            height: 100vh; 
+            scroll-snap-type: y mandatory; 
+            overflow-y: scroll; 
+        }
+        .reel { 
+            height: 100vh; 
+            scroll-snap-align: start; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .video-container { 
+            width: 100%; 
+            max-width: 400px; 
+            height: 85vh; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            background: #000;
+            position: relative;
+        }
+        video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        
+        /* Ad Styles */
+        .ad-container {
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+        }
+        .ad-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Install Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 25px;
+            z-index: 1000;
+            font-size: 14px;
+            display: none;
+        }
+        .install-btn {
+            background: #ff0050;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        Install app for better experience
+        <button class="install-btn" onclick="installApp()">Install</button>
+    </div>
+
+    <div class="reels-container" id="reelsContainer">
+        <!-- Video 1 -->
+        <div class="reel">
+            <div class="video-container">
+                <video loop playsinline>
+                    <source src="https://cdn.streamable.com/video/mp4/eqj5zl.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+        
+        <!-- Ad -->
+        <div class="reel">
+            <div class="video-container ad-container">
+                <div class="ad-badge">Sponsored</div>
+                <div class="ad-content">
+                    <script async="async" data-cfasync="false" src="//acceptableremotehumorous.com/73811eb8122a9db78a112c1a81392bcb/invoke.js"></script>
+                    <div id="container-73811eb8122a9db78a112c1a81392bcb"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Video 2 -->
+        <div class="reel">
+            <div class="video-container">
+                <video loop playsinline>
+                    <source src="https://cdn.streamable.com/video/mp4/3cq7z3.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web App Auto-play - Works reliably in installed app
+        function setupAutoPlay() {
+            const videos = document.querySelectorAll('video');
+            
+            // Prepare all videos
+            videos.forEach(video => {
+                video.muted = true;
+                video.playsInline = true;
+                video.preload = "auto";
+            });
+            
+            // Auto-play visible videos
+            function playVisibleVideos() {
+                videos.forEach(video => {
+                    const rect = video.getBoundingClientRect();
+                    const isVisible = rect.top >= -100 && rect.bottom <= window.innerHeight + 100;
+                    
+                    if (isVisible) {
+                        video.play().catch(e => {
+                            // If auto-play fails, show controls
+                            video.controls = true;
+                        });
+                    } else {
+                        video.pause();
+                        video.controls = false;
+                    }
+                });
+            }
+            
+            // Setup scroll listener
+            document.getElementById('reelsContainer').addEventListener('scroll', playVisibleVideos);
+            
+            // Initial play
+            setTimeout(playVisibleVideos, 500);
+            
+            // Show install prompt for better experience
+            showInstallPrompt();
+        }
+        
+        // Web App Installation
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallPrompt();
+        });
+        
+        function showInstallPrompt() {
+            const prompt = document.getElementById('installPrompt');
+            if (deferredPrompt) {
+                prompt.style.display = 'block';
+            }
+        }
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('installPrompt').style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+        
+        // Start when page loads
+        window.addEventListener('load', setupAutoPlay);
+        
+        // Service Worker Registration for full PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>
